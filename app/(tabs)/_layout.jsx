@@ -1,62 +1,198 @@
-
-import { FontAwesome } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Dimensions, Platform, View } from 'react-native';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-// Actually I defined colors in tailwind, but expo-router tabs use JS objects.
-// Let's standardise on my Neo-Pop colors manually here.
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function TabLayout() {
-    const colorScheme = useColorScheme();
-
     return (
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarActiveTintColor: '#FF6F00', // Primary Orange
-                tabBarInactiveTintColor: '#1E1E1E',
+                tabBarActiveTintColor: '#000000',
+                tabBarInactiveTintColor: '#9CA3AF',
                 tabBarStyle: {
                     borderTopWidth: 2,
                     borderTopColor: '#000000',
                     backgroundColor: '#FFFFFF',
-                    height: 60,
-                    paddingBottom: 5,
+                    height: Platform.OS === 'ios' ? 90 : 75,
+                    paddingTop: 8,
+                    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+                    paddingHorizontal: 4,
                 },
                 tabBarLabelStyle: {
-                    fontFamily: Platform.select({ ios: 'Arial', android: 'Roboto' }), // Should be Neo-Pop font if available
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                }
-            }}>
+                    fontSize: 9,
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.3,
+                    marginTop: 4,
+                },
+                tabBarItemStyle: {
+                    flex: 1,
+                    paddingVertical: 2,
+                },
+            }}
+        >
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Adopt',
-                    tabBarIcon: ({ color }) => <FontAwesome name="paw" size={24} color={color} />,
+                    title: 'Home',
+                    tabBarIcon: ({ color, focused }) => (
+                        <View
+                            style={[
+                                {
+                                    height: 40,
+                                    width: 48,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 8,
+                                },
+                                focused && {
+                                    backgroundColor: '#CCFF66',
+                                    borderWidth: 2,
+                                    borderColor: '#000',
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 2, height: 2 },
+                                    shadowOpacity: 1,
+                                    shadowRadius: 0,
+                                    elevation: 3,
+                                }
+                            ]}
+                        >
+                            <MaterialCommunityIcons name="home" size={24} color={focused ? '#000' : color} />
+                        </View>
+                    ),
                 }}
             />
             <Tabs.Screen
-                name="search"
+                name="messages"
                 options={{
-                    title: 'Search',
-                    tabBarIcon: ({ color }) => <FontAwesome name="search" size={24} color={color} />,
+                    title: 'Messages',
+                    tabBarIcon: ({ color, focused }) => (
+                        <View
+                            style={[
+                                {
+                                    height: 40,
+                                    width: 48,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 8,
+                                },
+                                focused && {
+                                    backgroundColor: '#CCFF66',
+                                    borderWidth: 2,
+                                    borderColor: '#000',
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 2, height: 2 },
+                                    shadowOpacity: 1,
+                                    shadowRadius: 0,
+                                    elevation: 3,
+                                }
+                            ]}
+                        >
+                            <MaterialCommunityIcons name="email-outline" size={24} color={focused ? '#000' : color} />
+                        </View>
+                    ),
                 }}
             />
             <Tabs.Screen
-                name="donate"
+                name="shop"
                 options={{
-                    title: 'Donate',
-                    tabBarIcon: ({ color }) => <FontAwesome name="heart" size={24} color={color} />,
+                    title: 'Shop',
+                    tabBarIcon: ({ color, focused }) => (
+                        <View
+                            style={[
+                                {
+                                    height: 40,
+                                    width: 48,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 8,
+                                },
+                                focused && {
+                                    backgroundColor: '#CCFF66',
+                                    borderWidth: 2,
+                                    borderColor: '#000',
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 2, height: 2 },
+                                    shadowOpacity: 1,
+                                    shadowRadius: 0,
+                                    elevation: 3,
+                                }
+                            ]}
+                        >
+                            <MaterialCommunityIcons name="shopping-outline" size={24} color={focused ? '#000' : color} />
+                        </View>
+                    ),
                 }}
             />
             <Tabs.Screen
-                name="profile"
+                name="emergency"
                 options={{
-                    title: 'Profile',
-                    tabBarIcon: ({ color }) => <FontAwesome name="user" size={24} color={color} />,
+                    title: 'Emergency',
+                    tabBarIcon: ({ color, focused }) => (
+                        <View
+                            style={[
+                                {
+                                    height: 40,
+                                    width: 48,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 8,
+                                },
+                                focused && {
+                                    backgroundColor: '#CCFF66',
+                                    borderWidth: 2,
+                                    borderColor: '#000',
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 2, height: 2 },
+                                    shadowOpacity: 1,
+                                    shadowRadius: 0,
+                                    elevation: 3,
+                                }
+                            ]}
+                        >
+                            <MaterialCommunityIcons name="medical-bag" size={24} color={focused ? '#000' : color} />
+                        </View>
+                    ),
                 }}
             />
+            <Tabs.Screen
+                name="activity"
+                options={{
+                    title: 'Activity',
+                    tabBarIcon: ({ color, focused }) => (
+                        <View
+                            style={[
+                                {
+                                    height: 40,
+                                    width: 48,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 8,
+                                },
+                                focused && {
+                                    backgroundColor: '#CCFF66',
+                                    borderWidth: 2,
+                                    borderColor: '#000',
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 2, height: 2 },
+                                    shadowOpacity: 1,
+                                    shadowRadius: 0,
+                                    elevation: 3,
+                                }
+                            ]}
+                        >
+                            <MaterialCommunityIcons name="history" size={24} color={focused ? '#000' : color} />
+                        </View>
+                    ),
+                }}
+            />
+            {/* Hidden screens */}
+            <Tabs.Screen name="donate" options={{ href: null }} />
+            <Tabs.Screen name="profile" options={{ href: null }} />
+            <Tabs.Screen name="search" options={{ href: null }} />
+            <Tabs.Screen name="explore" options={{ href: null }} />
         </Tabs>
     );
 }

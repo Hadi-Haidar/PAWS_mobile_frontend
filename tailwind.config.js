@@ -4,14 +4,22 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#FF6F00", // Action Orange (Neo-Pop)
-        secondary: "#93C47D", // Pistachio Green (Neo-Pop)
-        background: "#FDFDFD", // Off-white
+        primary: "#FF6B00", // Pop Orange
+        secondary: "#CCFF66", // Pop Green/Pistachio
+        background: "#FFFAF0", // Pop Background (warm white)
         surface: "#FFFFFF",
         text: "#1E1E1E",
         "text-secondary": "#757575",
         border: "#E0E0E0",
         danger: "#D32F2F",
+        // Neo-Pop specific
+        "pop-orange": "#FF6B00",
+        "pop-green": "#CCFF66",
+        "pop-bg": "#FFFAF0",
+      },
+      fontFamily: {
+        display: ["SpaceGrotesk", "sans-serif"],
+        body: ["Manrope", "sans-serif"],
       },
     },
   },
