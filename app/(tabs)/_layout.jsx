@@ -1,9 +1,11 @@
-import { Tabs } from 'expo-router';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
+import { FontAwesome } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
+
 import { useColorScheme } from '@/hooks/use-color-scheme';
+// Actually I defined colors in tailwind, but expo-router tabs use JS objects.
+// Let's standardise on my Neo-Pop colors manually here.
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
@@ -11,22 +13,48 @@ export default function TabLayout() {
     return (
         <Tabs
             screenOptions={{
-                tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
                 headerShown: false,
-                tabBarButton: HapticTab,
+                tabBarActiveTintColor: '#FF6F00', // Primary Orange
+                tabBarInactiveTintColor: '#1E1E1E',
+                tabBarStyle: {
+                    borderTopWidth: 2,
+                    borderTopColor: '#000000',
+                    backgroundColor: '#FFFFFF',
+                    height: 60,
+                    paddingBottom: 5,
+                },
+                tabBarLabelStyle: {
+                    fontFamily: Platform.select({ ios: 'Arial', android: 'Roboto' }), // Should be Neo-Pop font if available
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                }
             }}>
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Home',
-                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+                    title: 'Adopt',
+                    tabBarIcon: ({ color }) => <FontAwesome name="paw" size={24} color={color} />,
                 }}
             />
             <Tabs.Screen
-                name="explore"
+                name="search"
                 options={{
-                    title: 'Explore',
-                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+                    title: 'Search',
+                    tabBarIcon: ({ color }) => <FontAwesome name="search" size={24} color={color} />,
+                }}
+            />
+            <Tabs.Screen
+                name="donate"
+                options={{
+                    title: 'Donate',
+                    tabBarIcon: ({ color }) => <FontAwesome name="heart" size={24} color={color} />,
+                }}
+            />
+            <Tabs.Screen
+                name="profile"
+                options={{
+                    title: 'Profile',
+                    tabBarIcon: ({ color }) => <FontAwesome name="user" size={24} color={color} />,
                 }}
             />
         </Tabs>
