@@ -1,12 +1,14 @@
 
+
 import { supabase } from '../lib/supabase';
 
-export const getPets = async ({ page = 1, limit = 20, type, search, region } = {}) => {
+export const getPets = async ({ page = 1, limit = 20, type, search, region, ownerId } = {}) => {
     const offset = (page - 1) * limit;
     let query = supabase
         .from('Pet')
         .select('*', { count: 'exact' });
 
+    if (ownerId) query = query.eq('ownerId', ownerId);
     if (type) query = query.eq('type', type);
     if (region) query = query.ilike('location', `%${region}%`);
     if (search) query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
@@ -54,4 +56,24 @@ export const getPetById = async (id) => {
         .single();
 
     return { data, error };
+};
+
+export const updatePet = async (id, updates) => {
+    const { data, error } = await supabase
+        .from('Pet')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    return { data, error };
+};
+
+export const deletePet = async (id) => {
+    const { error } = await supabase
+        .from('Pet')
+        .delete()
+        .eq('id', id);
+
+    return { error };
 };

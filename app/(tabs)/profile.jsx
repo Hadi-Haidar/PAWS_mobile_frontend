@@ -1,19 +1,39 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Alert, Modal, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { useFavorites } from '../../context/FavoritesContext';
+import { getDonationHistory } from '../../services/donations';
 
 export default function ProfileScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { user, signOut } = useAuth();
+    const { favorites } = useFavorites();
     const [isSettingsVisible, setSettingsVisible] = useState(false);
+    const [totalDonated, setTotalDonated] = useState(0);
+    const [donationCount, setDonationCount] = useState(0);
+
+    useFocusEffect(
+        useCallback(() => {
+            const fetchDonations = async () => {
+                const { data } = await getDonationHistory();
+                if (data) {
+                    setTotalDonated(data.total || 0);
+                    setDonationCount(data.count || 0);
+                }
+            };
+            fetchDonations();
+        }, [])
+    );
 
     const userName = user?.user_metadata?.full_name || 'Alex Johnson';
     const avatarUrl = user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/300';
+
+    // ... existing handlers ...
 
     const handleSignOut = async () => {
         setSettingsVisible(false);
@@ -43,6 +63,7 @@ export default function ProfileScreen() {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#FFFAF0' }}>
+            {/* ... Existing header and profile implementation ... */}
             <StatusBar barStyle="dark-content" backgroundColor="#FFFAF0" />
 
             {/* Header */}
@@ -167,7 +188,7 @@ export default function ProfileScreen() {
                         shadowRadius: 0,
                     }}>
                         <Text style={{ fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                            Member Since 2023
+                            Member Since {user?.created_at ? new Date(user.created_at).getFullYear() : new Date().getFullYear()}
                         </Text>
                     </View>
                 </View>
@@ -175,18 +196,20 @@ export default function ProfileScreen() {
                 {/* Menu Cards */}
                 <Card
                     title="Favorites"
-                    subtitle="3 furry friends saved"
+                    subtitle={`${favorites.length} furry friends saved`}
                     tag="My Collection"
                     color="#FF6B00" // Pop Orange
                     icon="heart"
+                    onPress={() => router.push('/favorites')}
                 />
 
                 <Card
                     title="Donations"
-                    subtitle="$150 Total Contributed"
-                    tag="Donor Level 2"
-                    color="#CCFF66" // Pistachio
+                    subtitle={`$${totalDonated.toFixed(2)} Total Contributed`}
+                    tag={donationCount > 0 ? `${donationCount} Donation${donationCount !== 1 ? 's' : ''}` : 'Start Giving'}
+                    color="#CCFF66"
                     icon="hand-coin"
+                    onPress={() => router.push('/donations')}
                 />
 
                 <Card
@@ -305,23 +328,26 @@ export default function ProfileScreen() {
     );
 }
 
-function Card({ title, subtitle, tag, color, icon }) {
+function Card({ title, subtitle, tag, color, icon, onPress }) {
     return (
-        <TouchableOpacity style={{
-            width: '100%',
-            backgroundColor: color,
-            borderWidth: 2,
-            borderColor: '#000',
-            borderRadius: 16,
-            padding: 16,
-            marginBottom: 16,
-            height: 120, // specific height from design
-            justifyContent: 'space-between',
-            shadowColor: '#000',
-            shadowOffset: { width: 4, height: 4 },
-            shadowOpacity: 1,
-            shadowRadius: 0,
-        }}>
+        <TouchableOpacity
+            onPress={onPress}
+            activeOpacity={0.8}
+            style={{
+                width: '100%',
+                backgroundColor: color,
+                borderWidth: 2,
+                borderColor: '#000',
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 16,
+                height: 120, // specific height from design
+                justifyContent: 'space-between',
+                shadowColor: '#000',
+                shadowOffset: { width: 4, height: 4 },
+                shadowOpacity: 1,
+                shadowRadius: 0,
+            }}>
             <View>
                 <View style={{
                     backgroundColor: '#000',

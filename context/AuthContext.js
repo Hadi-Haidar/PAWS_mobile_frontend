@@ -12,9 +12,12 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    const [session, setSession] = useState(null);
+
     useEffect(() => {
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
         });
@@ -22,6 +25,7 @@ export const AuthProvider = ({ children }) => {
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {
+                setSession(session);
                 setUser(session?.user ?? null);
             }
         );
@@ -31,8 +35,11 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         user,
+        session,
+        token: session?.access_token,
         loading,
         isAuthenticated: !!user,
+        signOut: () => supabase.auth.signOut(),
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

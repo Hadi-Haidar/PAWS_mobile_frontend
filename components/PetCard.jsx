@@ -2,24 +2,46 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { memo } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, Vibration, View } from 'react-native';
 
-const PetCard = memo(({ pet }) => {
+import { useFavorites } from '../context/FavoritesContext';
+
+const PetCard = memo(({ pet, isSelected, onLongPress, selectionMode }) => {
     const router = useRouter();
-    const imageUrl = pet.images?.[0] || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80';
-    const isFromShelter = pet.ownerId?.includes('shelter') || pet.id % 2 === 0;
+    const { isFavorite, toggleFavorite } = useFavorites();
+    const isFav = isFavorite(pet.id);
+    const imageUrl = pet.images && pet.images.length > 0 ? pet.images[0] : null;
+
+    // Default to 'User' if not specified. Real app would check user role or owner type.
+    const isFromShelter = false;
+
+    const handlePress = () => {
+        if (selectionMode) {
+            // In selection mode, tap toggles selection (or deselects)
+            onLongPress?.(pet);
+        } else {
+            router.push(`/pet/${pet.id}`);
+        }
+    };
+
+    const handleLongPress = () => {
+        Vibration.vibrate(50);
+        onLongPress?.(pet);
+    };
 
     return (
         <TouchableOpacity
-            onPress={() => router.push(`/pet/${pet.id}`)}
+            onPress={handlePress}
+            onLongPress={handleLongPress}
+            delayLongPress={400}
             activeOpacity={0.9}
             style={{
                 flex: 1,
                 margin: 6, // uniform margin
-                backgroundColor: '#fff',
+                backgroundColor: isSelected ? '#CCFF66' : '#fff',
                 borderRadius: 12,
-                borderWidth: 2,
-                borderColor: '#000',
+                borderWidth: isSelected ? 3 : 2,
+                borderColor: isSelected ? '#FF6B00' : '#000',
                 shadowColor: '#000',
                 shadowOffset: { width: 4, height: 4 },
                 shadowOpacity: 1,
@@ -28,6 +50,26 @@ const PetCard = memo(({ pet }) => {
                 overflow: 'visible', // allow shadow
             }}
         >
+            {/* Selection Indicator */}
+            {isSelected && (
+                <View style={{
+                    position: 'absolute',
+                    top: -8,
+                    left: -8,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: '#FF6B00',
+                    borderWidth: 2,
+                    borderColor: '#000',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                }}>
+                    <MaterialCommunityIcons name="check" size={16} color="white" />
+                </View>
+            )}
+
             {/* Image Container */}
             <View style={{
                 width: '100%',
@@ -37,97 +79,111 @@ const PetCard = memo(({ pet }) => {
                 overflow: 'hidden',
                 borderBottomWidth: 2,
                 borderBottomColor: '#000',
+                backgroundColor: '#f3f4f6', // light gray bg for no-image
+                alignItems: 'center',
+                justifyContent: 'center'
             }}>
-                <Image
-                    source={{ uri: imageUrl }}
-                    style={{ width: '100%', height: '100%' }}
-                    contentFit="cover"
-                    transition={300}
-                />
-
-                {/* Source Badge */}
-                <View
-                    style={{
-                        position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        backgroundColor: isFromShelter ? '#FF6B00' : '#CCFF66',
-                        borderWidth: 2,
-                        borderColor: '#000',
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderRadius: 4,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 1, height: 1 },
-                        shadowOpacity: 0.8,
-                        shadowRadius: 0,
-                    }}
-                >
-                    <MaterialCommunityIcons
-                        name={isFromShelter ? "home-heart" : "account"}
-                        size={10}
-                        color="black"
+                {imageUrl ? (
+                    <Image
+                        source={{ uri: imageUrl }}
+                        style={{ width: '100%', height: '100%' }}
+                        contentFit="cover"
+                        transition={300}
                     />
-                    <Text style={{ color: '#000', fontSize: 8, fontWeight: '800', textTransform: 'uppercase', marginLeft: 4 }}>
-                        {isFromShelter ? 'Shelter' : 'User'}
-                    </Text>
-                </View>
+                ) : (
+                    <View style={{ alignItems: 'center', opacity: 0.5 }}>
+                        <MaterialCommunityIcons name="paw" size={32} color="#9CA3AF" />
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#6B7280', marginTop: 4 }}>
+                            No Photo
+                        </Text>
+                    </View>
+                )}
 
-                {/* Favorite Button */}
-                <TouchableOpacity
-                    style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        width: 28,
-                        height: 28,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: 14,
-                        backgroundColor: '#fff',
-                        borderWidth: 2,
-                        borderColor: '#000',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 1, height: 1 },
-                        shadowOpacity: 1,
-                        shadowRadius: 0,
-                    }}
-                >
-                    <MaterialCommunityIcons name="heart-outline" size={14} color="black" />
-                </TouchableOpacity>
+                {/* Source Badge - Only show if we actually know it's a shelter (hidden for now as logic was fake) */}
+                {isFromShelter && (
+                    <View
+                        style={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            backgroundColor: '#FF6B00',
+                            borderWidth: 2,
+                            borderColor: '#000',
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            borderRadius: 4,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 1, height: 1 },
+                            shadowOpacity: 0.8,
+                            shadowRadius: 0,
+                        }}
+                    >
+                        <MaterialCommunityIcons
+                            name="home-heart"
+                            size={10}
+                            color="black"
+                        />
+                        <Text style={{ color: '#000', fontSize: 8, fontWeight: '800', textTransform: 'uppercase', marginLeft: 4 }}>
+                            Shelter
+                        </Text>
+                    </View>
+                )}
+
+                {/* Favorite Button - Hide in selection mode */}
+                {!selectionMode && (
+                    <TouchableOpacity
+                        onPress={(e) => {
+                            e.stopPropagation(); // Prevent navigation
+                            toggleFavorite(pet);
+                        }}
+                        style={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            width: 28,
+                            height: 28,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 14,
+                            backgroundColor: '#fff',
+                            borderWidth: 2,
+                            borderColor: '#000',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 1, height: 1 },
+                            shadowOpacity: 1,
+                            shadowRadius: 0,
+                        }}
+                    >
+                        <MaterialCommunityIcons
+                            name={isFav ? "heart" : "heart-outline"}
+                            size={14}
+                            color={isFav ? "#FF6B00" : "black"}
+                        />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Info Container */}
-            <View style={{ p: 10, paddingHorizontal: 10, paddingBottom: 10, paddingTop: 8 }}>
+            <View style={{ padding: 10, paddingHorizontal: 10, paddingBottom: 10, paddingTop: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                     <Text style={{ fontSize: 14, fontWeight: '900', color: '#000', flex: 1 }} numberOfLines={1}>
                         {pet.name}
                     </Text>
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: '#CCFF66',
-                            paddingHorizontal: 4,
-                            paddingVertical: 2,
-                            borderRadius: 4,
-                            borderWidth: 1,
-                            borderColor: '#000',
-                            marginLeft: 4,
-                        }}
-                    >
-                        <MaterialCommunityIcons name="map-marker" size={8} color="black" />
-                        <Text style={{ color: '#000', fontSize: 8, fontWeight: '700', marginLeft: 1 }}>2.5m</Text>
-                    </View>
                 </View>
                 <Text style={{ color: '#4B5563', fontSize: 10, fontWeight: '700', marginBottom: 2 }} numberOfLines={1}>
                     {pet.breed || pet.type} • {pet.age ? `${pet.age} yrs` : 'Unknown'}
                 </Text>
-                <Text style={{ color: '#9CA3AF', fontSize: 8, fontFamily: 'monospace' }} numberOfLines={1}>
-                    {pet.location || 'Local Shelter'}
-                </Text>
+
+                {pet.location && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                        <MaterialCommunityIcons name="map-marker" size={10} color="#6B7280" />
+                        <Text style={{ color: '#9CA3AF', fontSize: 9, fontFamily: 'monospace', marginLeft: 2 }} numberOfLines={1}>
+                            {pet.location}
+                        </Text>
+                    </View>
+                )}
             </View>
         </TouchableOpacity>
     );

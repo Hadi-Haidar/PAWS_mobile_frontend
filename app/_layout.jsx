@@ -46,7 +46,13 @@ const RootLayoutContent = () => {
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="auth/signin" options={{ headerShown: false }} />
                 <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
+                <Stack.Screen name="add-animal" options={{ headerShown: false }} />
+                <Stack.Screen name="pet/[id]" options={{ headerShown: false }} />
+                <Stack.Screen name="favorites" options={{ headerShown: false }} />
+                <Stack.Screen name="donations" options={{ headerShown: false }} />
+                <Stack.Screen name="edit-pet/[id]" options={{ headerShown: false }} />
                 <Stack.Screen name="auth/verify-otp" options={{ headerShown: false }} />
+                <Stack.Screen name="qr-scanner" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
                 <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
             </Stack>
             <StatusBar style="auto" />
@@ -54,10 +60,19 @@ const RootLayoutContent = () => {
     );
 };
 
+import { StripeProvider } from '@stripe/stripe-react-native';
+import { FavoritesProvider } from '../context/FavoritesContext';
+
+const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder';
+
 export default function RootLayout() {
     return (
         <AuthProvider>
-            <RootLayoutContent />
+            <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+                <FavoritesProvider>
+                    <RootLayoutContent />
+                </FavoritesProvider>
+            </StripeProvider>
         </AuthProvider>
     );
 }
