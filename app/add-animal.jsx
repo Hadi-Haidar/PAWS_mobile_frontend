@@ -54,6 +54,7 @@ export default function AddAnimalScreen() {
     const handleGetCurrentLocation = async () => {
         setLoading(true);
         try {
+            // Check permissions first (fast)
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert('Permission Denied', 'Permission to access location was denied');
@@ -63,36 +64,141 @@ export default function AddAnimalScreen() {
 
             let location = null;
 
-            // First, try to get the last known location (instant, cached)
+            // Strategy 1: Use cached location (INSTANT - up to 5 minutes old)
             try {
                 location = await Location.getLastKnownPositionAsync({
-                    maxAge: 60000, // Accept cached location up to 1 minute old
-                    requiredAccuracy: 100, // Within 100 meters
+                    maxAge: 300000, // 5 minutes - much more aggressive caching
+                    requiredAccuracy: 200, // Allow 200m accuracy for speed
                 });
             } catch (e) {
-                // Last known not available, continue to get current
+                // Cached location not available
             }
 
-            // If no cached location or it's too old, get fresh location
+            // Strategy 2: Get fresh location with LOW accuracy (fastest GPS lock)
             if (!location) {
-                // Use balanced accuracy for faster response
-                location = await Location.getCurrentPositionAsync({
-                    accuracy: Location.Accuracy.Balanced, // Good balance of speed vs accuracy
-                    timeInterval: 5000, // Update every 5 seconds max
-                    distanceInterval: 10, // Update every 10 meters
+                // Use a timeout to prevent long waits
+                const locationPromise = Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Low, // Fastest - ~3km accuracy is fine for city/area
                 });
+
+                // Race against a 3-second timeout
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('timeout')), 3000)
+                );
+
+                try {
+                    location = await Promise.race([locationPromise, timeoutPromise]);
+                } catch (e) {
+                    // If Low accuracy times out, try Balanced as fallback
+                    if (e.message === 'timeout') {
+                        location = await Location.getCurrentPositionAsync({
+                            accuracy: Location.Accuracy.Balanced,
+                        });
+                    } else {
+                        throw e;
+                    }
+                }
             }
 
-            if (location) {
-                setFormData(prev => ({
-                    ...prev,
-                    latitude: location.coords.latitude.toString(),
-                    longitude: location.coords.longitude.toString()
-                }));
-                Alert.alert('✓ Location Set', `GPS coordinates captured successfully!\n\nAccuracy: ~${Math.round(location.coords.accuracy || 0)}m`);
-            } else {
+            if (!location) {
                 throw new Error('Could not determine location');
             }
+
+            // Update coordinates immediately (user sees instant feedback)
+            setFormData(prev => ({
+                ...prev,
+                latitude: location.coords.latitude.toString(),
+                longitude: location.coords.longitude.toString()
+            }));
+
+            // Use OpenStreetMap Nominatim API for ENGLISH + SPECIFIC place names
+            let locationName = '';
+            try {
+                const lat = location.coords.latitude;
+                const lon = location.coords.longitude;
+
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=en`,
+                    {
+                        headers: {
+                            'User-Agent': 'PAWS-App/1.0' // Required by Nominatim
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const addr = data.address || {};
+                    const parts = [];
+
+                    // 1. SPECIFIC POI NAME (Most accurate - building, shop, amenity)
+                    const poiName = addr.amenity || addr.building || addr.shop ||
+                        addr.tourism || addr.leisure || addr.office ||
+                        addr.historic || addr.place;
+                    if (poiName && poiName !== 'yes') {
+                        parts.push(poiName);
+                    }
+
+                    // 2. Street Address
+                    if (addr.road) {
+                        if (addr.house_number) {
+                            parts.push(`${addr.house_number} ${addr.road}`);
+                        } else {
+                            parts.push(addr.road);
+                        }
+                    }
+
+                    // 3. Neighborhood/Suburb
+                    if (addr.neighbourhood || addr.suburb || addr.quarter) {
+                        const area = addr.neighbourhood || addr.suburb || addr.quarter;
+                        if (!parts.includes(area)) {
+                            parts.push(area);
+                        }
+                    }
+
+                    // 4. City/Town
+                    const city = addr.city || addr.town || addr.village || addr.municipality;
+                    if (city && !parts.includes(city)) {
+                        parts.push(city);
+                    }
+
+                    // 5. Fallback to display_name if nothing specific found
+                    if (parts.length === 0 && data.display_name) {
+                        // Take first 2-3 parts of display_name
+                        const displayParts = data.display_name.split(', ').slice(0, 3);
+                        parts.push(...displayParts);
+                    }
+
+                    locationName = parts.slice(0, 3).join(', '); // Max 3 parts for readability
+                }
+            } catch (geoError) {
+                console.log('Nominatim geocoding failed, using fallback:', geoError);
+                // Fallback to expo-location if Nominatim fails
+                try {
+                    const reverseGeocode = await Location.reverseGeocodeAsync({
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude
+                    });
+                    if (reverseGeocode && reverseGeocode.length > 0) {
+                        const addr = reverseGeocode[0];
+                        locationName = [addr.name, addr.city].filter(Boolean).join(', ');
+                    }
+                } catch (e) {
+                    // Silently fail
+                }
+            }
+
+            // Final update with location name
+            setFormData(prev => ({
+                ...prev,
+                location: locationName || prev.location
+            }));
+
+            Alert.alert(
+                '✓ Location Set',
+                `${locationName || 'Unknown Location'}\n\nAccuracy: ~${Math.round(location.coords.accuracy || 0)}m`
+            );
+
         } catch (error) {
             console.log('Location error:', error);
             Alert.alert('Location Error', 'Could not fetch location. Please ensure:\n\n• GPS is enabled\n• You are outdoors or near a window\n• Location permissions are granted');

@@ -2,6 +2,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -25,8 +26,11 @@ export default function EditPetScreen() {
     const [breed, setBreed] = useState('');
     const [age, setAge] = useState('');
     const [location, setLocation] = useState('');
+    const [latitude, setLatitude] = useState('');
+    const [longitude, setLongitude] = useState('');
     const [description, setDescription] = useState('');
     const [imageUrl, setImageUrl] = useState('');
+    const [gpsLoading, setGpsLoading] = useState(false);
 
     useEffect(() => {
         const fetchPet = async () => {
@@ -42,6 +46,8 @@ export default function EditPetScreen() {
                 setBreed(data.breed || '');
                 setAge(data.age?.toString() || '');
                 setLocation(data.location || '');
+                setLatitude(data.Latitude?.toString() || '');
+                setLongitude(data.Longitude?.toString() || '');
                 setDescription(data.description || '');
                 setImageUrl(data.images?.[0] || '');
             }
@@ -60,6 +66,118 @@ export default function EditPetScreen() {
 
         if (!result.canceled && result.assets[0]) {
             setImageUrl(result.assets[0].uri);
+        }
+    };
+
+    const handleGetCurrentLocation = async () => {
+        setGpsLoading(true);
+        try {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Permission to access location was denied');
+                setGpsLoading(false);
+                return;
+            }
+
+            let loc = null;
+
+            // Strategy 1: Use cached location (INSTANT - up to 5 minutes old)
+            try {
+                loc = await Location.getLastKnownPositionAsync({
+                    maxAge: 300000,
+                    requiredAccuracy: 200,
+                });
+            } catch (e) { }
+
+            // Strategy 2: Get fresh location with LOW accuracy (fastest GPS lock)
+            if (!loc) {
+                const locationPromise = Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Low,
+                });
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('timeout')), 3000)
+                );
+                try {
+                    loc = await Promise.race([locationPromise, timeoutPromise]);
+                } catch (e) {
+                    if (e.message === 'timeout') {
+                        loc = await Location.getCurrentPositionAsync({
+                            accuracy: Location.Accuracy.Balanced,
+                        });
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+
+            if (!loc) {
+                throw new Error('Could not determine location');
+            }
+
+            // Update coordinates immediately
+            setLatitude(loc.coords.latitude.toString());
+            setLongitude(loc.coords.longitude.toString());
+
+            // Use OpenStreetMap Nominatim API for ENGLISH + SPECIFIC place names
+            let locationName = '';
+            try {
+                const lat = loc.coords.latitude;
+                const lon = loc.coords.longitude;
+
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=en`,
+                    { headers: { 'User-Agent': 'PAWS-App/1.0' } }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const addr = data.address || {};
+                    const parts = [];
+
+                    const poiName = addr.amenity || addr.building || addr.shop ||
+                        addr.tourism || addr.leisure || addr.office ||
+                        addr.historic || addr.place;
+                    if (poiName && poiName !== 'yes') parts.push(poiName);
+
+                    if (addr.road) {
+                        if (addr.house_number) {
+                            parts.push(`${addr.house_number} ${addr.road}`);
+                        } else {
+                            parts.push(addr.road);
+                        }
+                    }
+
+                    if (addr.neighbourhood || addr.suburb || addr.quarter) {
+                        const area = addr.neighbourhood || addr.suburb || addr.quarter;
+                        if (!parts.includes(area)) parts.push(area);
+                    }
+
+                    const city = addr.city || addr.town || addr.village || addr.municipality;
+                    if (city && !parts.includes(city)) parts.push(city);
+
+                    if (parts.length === 0 && data.display_name) {
+                        const displayParts = data.display_name.split(', ').slice(0, 3);
+                        parts.push(...displayParts);
+                    }
+
+                    locationName = parts.slice(0, 3).join(', ');
+                }
+            } catch (geoError) {
+                console.log('Nominatim geocoding failed:', geoError);
+            }
+
+            setLocation(locationName || location);
+
+            Alert.alert(
+                '✓ Location Updated',
+                `${locationName || 'Unknown Location'}\n\nAccuracy: ~${Math.round(loc.coords.accuracy || 0)}m`
+            );
+
+        } catch (error) {
+            console.log('Location error:', error);
+            Alert.alert('Location Error', 'Could not fetch location. Please ensure GPS is enabled.');
+        } finally {
+            setGpsLoading(false);
         }
     };
 
@@ -85,6 +203,8 @@ export default function EditPetScreen() {
             breed: breed.trim() || null,
             age: age ? parseInt(age) : null,
             location: location.trim(),
+            Latitude: latitude ? parseFloat(latitude) : null,
+            Longitude: longitude ? parseFloat(longitude) : null,
             description: description.trim() || null,
             images: imageUrl ? [imageUrl] : [],
         };
@@ -310,6 +430,37 @@ export default function EditPetScreen() {
                                 fontWeight: '600',
                             }}
                         />
+                        {/* Update Location Button */}
+                        <TouchableOpacity
+                            onPress={handleGetCurrentLocation}
+                            disabled={gpsLoading}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#CCFF66',
+                                borderWidth: 2,
+                                borderColor: '#000',
+                                borderRadius: 12,
+                                padding: 14,
+                                marginTop: 8,
+                                gap: 8,
+                            }}
+                        >
+                            {gpsLoading ? (
+                                <ActivityIndicator size="small" color="#000" />
+                            ) : (
+                                <MaterialCommunityIcons name="crosshairs-gps" size={20} color="#000" />
+                            )}
+                            <Text style={{ fontWeight: '800', color: '#000' }}>
+                                {gpsLoading ? 'Getting Location...' : 'Update Current Location'}
+                            </Text>
+                        </TouchableOpacity>
+                        {latitude && longitude && (
+                            <Text style={{ fontSize: 12, color: '#666', marginTop: 6, fontWeight: '600' }}>
+                                📍 GPS: {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
+                            </Text>
+                        )}
                     </View>
 
                     {/* Description Input */}
