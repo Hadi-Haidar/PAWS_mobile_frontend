@@ -61,6 +61,7 @@ const RootLayoutContent = () => {
 };
 
 import { StripeProvider } from '@stripe/stripe-react-native';
+import { CartProvider } from '../context/CartContext';
 import { FavoritesProvider } from '../context/FavoritesContext';
 
 const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder';
@@ -70,7 +71,9 @@ export default function RootLayout() {
         <AuthProvider>
             <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
                 <FavoritesProvider>
-                    <RootLayoutContent />
+                    <CartProvider>
+                        <RootLayoutContent />
+                    </CartProvider>
                 </FavoritesProvider>
             </StripeProvider>
         </AuthProvider>
