@@ -235,7 +235,13 @@ export default function CartScreen() {
                                                     <Text style={styles.stepperValue}>{item.quantity}</Text>
 
                                                     <TouchableOpacity
-                                                        onPress={() => updateQuantity(item.productId, 1)}
+                                                        onPress={() => {
+                                                            if (item.maxStock !== undefined && item.quantity >= item.maxStock) {
+                                                                Alert.alert('Max Quantity', `Only ${item.maxStock} available in stock.`);
+                                                            } else {
+                                                                updateQuantity(item.productId, 1);
+                                                            }
+                                                        }}
                                                         style={styles.stepperButton}
                                                     >
                                                         <MaterialCommunityIcons name="plus" size={moderateScale(14)} color="#000" />

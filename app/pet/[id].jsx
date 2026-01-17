@@ -90,7 +90,7 @@ export default function PetDetailsScreen() {
                         router.push({
                             pathname: `/chat/${pet.ownerId}`,
                             params: {
-                                name: pet.contactName || 'Owner',
+                                name: pet.ownerRole === 'Admin' ? 'Main Shelter' : (pet.contactName || 'Owner'),
                             }
                         });
                     }
@@ -239,7 +239,7 @@ export default function PetDetailsScreen() {
                             position: 'absolute',
                             top: 12,
                             left: 12,
-                            backgroundColor: '#CCFF66',
+                            backgroundColor: roleLabel === 'Shelter' ? '#FF6B00' : '#CCFF66',
                             paddingHorizontal: 12,
                             paddingVertical: 6,
                             borderRadius: 8,
@@ -253,8 +253,8 @@ export default function PetDetailsScreen() {
                             shadowOpacity: 1,
                             shadowRadius: 0,
                         }}>
-                            <MaterialIcons name="person" size={14} color="black" />
-                            <Text style={{ fontSize: 11, fontWeight: '800', color: 'black' }}>{roleLabel}</Text>
+                            <MaterialIcons name="person" size={14} color={roleLabel === 'Shelter' ? 'white' : 'black'} />
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: roleLabel === 'Shelter' ? 'white' : 'black' }}>{roleLabel}</Text>
                         </View>
                     </View>
                 </View>
@@ -590,7 +590,7 @@ export default function PetDetailsScreen() {
                         router.push({
                             pathname: `/chat/${pet.ownerId || 'unknown'}`,
                             params: {
-                                name: pet.contactName || 'Owner',
+                                name: pet.ownerRole === 'Admin' ? 'Main Shelter' : (pet.contactName || 'Owner'),
                                 avatar: null
                             }
                         });

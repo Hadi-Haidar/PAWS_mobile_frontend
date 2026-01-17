@@ -26,12 +26,19 @@ export const CartProvider = ({ children }) => {
         setCart((prevCart) => {
             const existing = prevCart.find((item) => item.productId === product.id);
             if (existing) {
+                // If adding one more would exceed stock, don't change anything
+                if (existing.quantity >= product.stock) {
+                    return prevCart;
+                }
                 return prevCart.map((item) =>
                     item.productId === product.id
                         ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
             }
+            // If stock is 0 (should shouldn't happen via UI but good safety), don't add
+            if (product.stock <= 0) return prevCart;
+
             return [
                 ...prevCart,
                 {
@@ -41,6 +48,7 @@ export const CartProvider = ({ children }) => {
                     quantity: 1,
                     imageUrl: product.imageUrl,
                     category: product.category,
+                    maxStock: product.stock, // Store max stock
                 },
             ];
         });
@@ -54,7 +62,16 @@ export const CartProvider = ({ children }) => {
         setCart((prev) =>
             prev.map((item) => {
                 if (item.productId === productId) {
-                    const newQty = Math.max(1, item.quantity + delta);
+                    let newQty = item.quantity + delta;
+
+                    // Enforce lower bound
+                    newQty = Math.max(1, newQty);
+
+                    // Enforce upper bound if maxStock is known
+                    if (item.maxStock !== undefined) {
+                        newQty = Math.min(newQty, item.maxStock);
+                    }
+
                     return { ...item, quantity: newQty };
                 }
                 return item;

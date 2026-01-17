@@ -88,6 +88,11 @@ export default function ShopScreen() {
     };
 
     const handleAddToCart = (product) => {
+        const existingItem = cart.find(item => item.productId === product.id);
+        if (existingItem && existingItem.quantity >= product.stock) {
+            Alert.alert('Max Quantity Reached', `Only ${product.stock} available in stock.`);
+            return;
+        }
         addToCart(product);
         Alert.alert('Added to Cart', `${product.name} added to cart!`, [{ text: 'OK' }]);
     };
@@ -398,9 +403,6 @@ export default function ShopScreen() {
                                     <View>
                                         <Text style={{ fontSize: 18, fontWeight: '900', color: '#fff', fontStyle: 'italic', textTransform: 'uppercase' }}>
                                             Free Delivery
-                                        </Text>
-                                        <Text style={{ fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>
-                                            On orders over $50
                                         </Text>
                                     </View>
                                     <View

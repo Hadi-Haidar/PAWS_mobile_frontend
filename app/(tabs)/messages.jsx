@@ -108,7 +108,7 @@ export default function MessagesScreen() {
         >
             <View className="flex-row gap-4">
                 <View className="relative">
-                    <View className="w-14 h-14 bg-pop-green border-2 border-black rounded-full items-center justify-center overflow-hidden">
+                    <View className={`w-14 h-14 ${item.name === 'Main Shelter' ? 'bg-pop-orange' : 'bg-pop-green'} border-2 border-black rounded-full items-center justify-center overflow-hidden`}>
                         <MaterialCommunityIcons name="paw" size={32} color="black" opacity={0.5} />
                     </View>
                 </View>
@@ -136,15 +136,13 @@ export default function MessagesScreen() {
                 <View className="flex-row items-center gap-3">
                     <View
                         style={{
-                            shadowColor: '#000',
-                            shadowOffset: { width: 4, height: 4 },
-                            shadowOpacity: 1,
-                            shadowRadius: 0,
-                            elevation: 4
+                            width: 40,
+                            height: 40,
+                            alignItems: 'center',
+                            justifyContent: 'center',
                         }}
-                        className="w-10 h-10 bg-pop-orange border-[2.5px] border-black rounded-xl items-center justify-center"
                     >
-                        <MaterialCommunityIcons name="paw" size={24} color="white" />
+                        <MaterialCommunityIcons name="paw" size={22} color="#FF6B00" />
                     </View>
                     <Text className="text-2xl font-extrabold tracking-tight text-black">Messages</Text>
                 </View>

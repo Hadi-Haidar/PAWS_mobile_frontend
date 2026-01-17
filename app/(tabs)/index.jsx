@@ -346,7 +346,8 @@ export default function HomeScreen() {
             borderBottomColor: '#000',
             backgroundColor: '#FFFAF0',
         }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+            {/* Left Side: Profile & Notification */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 {/* Profile Image */}
                 <TouchableOpacity
                     onPress={() => router.push('/profile')}
@@ -376,28 +377,22 @@ export default function HomeScreen() {
                         </View>
                     )}
                 </TouchableOpacity>
-                <View style={{ flex: 1 }}>
-                    <View
-                        style={{
-                            backgroundColor: '#CCFF66',
-                            paddingHorizontal: 6,
-                            paddingVertical: 2,
-                            borderWidth: 1,
-                            borderColor: '#000',
-                            alignSelf: 'flex-start',
-                            marginBottom: 4,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 2, height: 2 },
-                            shadowOpacity: 1,
-                            shadowRadius: 0,
-                        }}
-                    >
-                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#000', textTransform: 'uppercase', letterSpacing: 0.5 }}>Welcome back</Text>
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#000' }} numberOfLines={1}>Hello, {userName}</Text>
-                </View>
+
+                {/* Notification Button - Transparent, no bg */}
+                <TouchableOpacity
+                    onPress={() => Alert.alert('Notifications', 'No new notifications')}
+                    style={{
+                        width: 40,
+                        height: 40,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <MaterialCommunityIcons name="bell" size={28} color="#99CC00" />
+                </TouchableOpacity>
             </View>
 
+            {/* Right Side: QR Scanner */}
             <TouchableOpacity
                 onPress={() => router.push('/qr-scanner')}
                 style={{
@@ -418,7 +413,7 @@ export default function HomeScreen() {
                 <MaterialCommunityIcons name="qrcode-scan" size={24} color="black" />
             </TouchableOpacity>
         </View>
-    ), [insets.top, userName, avatarUrl, router]);
+    ), [insets.top, avatarUrl, router]);
 
     // Memoized Header Component - CRITICAL: Must be stable to prevent FlashList re-measuring
     const ListHeader = useMemo(() => (
@@ -539,7 +534,7 @@ export default function HomeScreen() {
                             color: '#000',
                             height: '100%',
                         }}
-                        placeholder="Search breed, age..."
+                        placeholder="Search name..."
                         placeholderTextColor="#999"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
