@@ -4,7 +4,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthContext';
 import { getPetById } from '../../services/pets';
+import socket from '../../services/socket';
 
 import { useFavorites } from '../../context/FavoritesContext';
 
@@ -14,6 +16,7 @@ export default function PetDetailsScreen() {
     const [loading, setLoading] = useState(true);
     const [showMap, setShowMap] = useState(false);
     const { isFavorite, toggleFavorite } = useFavorites();
+    const { user } = useAuth(); // Get current user
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -48,6 +51,54 @@ export default function PetDetailsScreen() {
         fetchPet();
     }, [id]);
 
+    const handleAdopt = () => {
+        if (!user) {
+            Alert.alert('Sign In Required', 'You must be signed in to adopt a pet.');
+            return;
+        }
+
+        if (pet.ownerId === user.id) {
+            Alert.alert('Ownership', 'You cannot adopt your own pet!');
+            return;
+        }
+
+        Alert.alert(
+            'Adoption Request',
+            `Send adoption request for ${pet.name}?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Send Request',
+                    onPress: () => {
+                        // Ensure socket is open
+                        if (!socket.connected) {
+                            socket.auth = { userId: user.id };
+                            socket.connect();
+                        }
+
+                        const messageData = {
+                            senderId: user.id,
+                            receiverId: pet.ownerId,
+                            content: `I would like to adopt ${pet.name}!`,
+                            type: 'adoption_request',
+                            ticketId: pet.id, // Using ticketId for petId
+                        };
+
+                        socket.emit("send_message", messageData);
+
+                        // Navigate to chat
+                        router.push({
+                            pathname: `/chat/${pet.ownerId}`,
+                            params: {
+                                name: pet.contactName || 'Owner',
+                            }
+                        });
+                    }
+                }
+            ]
+        );
+    };
+
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFAF0' }}>
@@ -61,7 +112,7 @@ export default function PetDetailsScreen() {
     const imageUrl = pet.images && pet.images.length > 0 ? pet.images[0] : null;
 
     // Determine role badge
-    const ownerRole = 'USER';
+    const roleLabel = pet.ownerRole === 'Admin' ? 'Shelter' : 'User';
 
     return (
         <View style={{ flex: 1, backgroundColor: '#FFFAF0' }}>
@@ -203,7 +254,7 @@ export default function PetDetailsScreen() {
                             shadowRadius: 0,
                         }}>
                             <MaterialIcons name="person" size={14} color="black" />
-                            <Text style={{ fontSize: 11, fontWeight: '800', color: 'black' }}>{ownerRole}</Text>
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: 'black' }}>{roleLabel}</Text>
                         </View>
                     </View>
                 </View>
@@ -501,7 +552,7 @@ export default function PetDetailsScreen() {
             }}>
                 {/* Adopt Me Button */}
                 <TouchableOpacity
-                    onPress={() => Alert.alert('Adopt', `Starting adoption process for ${pet.name}!`)}
+                    onPress={handleAdopt}
                     activeOpacity={0.9}
                     style={{
                         height: footerButtonHeight,
@@ -535,7 +586,15 @@ export default function PetDetailsScreen() {
 
                 {/* Chat with Owner Button */}
                 <TouchableOpacity
-                    onPress={() => Alert.alert('Chat', 'Messaging feature coming soon!')}
+                    onPress={() => {
+                        router.push({
+                            pathname: `/chat/${pet.ownerId || 'unknown'}`,
+                            params: {
+                                name: pet.contactName || 'Owner',
+                                avatar: null
+                            }
+                        });
+                    }}
                     activeOpacity={0.9}
                     style={{
                         height: chatButtonHeight,
