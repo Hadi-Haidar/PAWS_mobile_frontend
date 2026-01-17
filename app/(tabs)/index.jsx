@@ -373,7 +373,9 @@ export default function HomeScreen() {
                         />
                     ) : (
                         <View style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#CCFF66' }}>
-                            <MaterialCommunityIcons name="account" size={28} color="black" />
+                            <Text style={{ fontSize: 20, fontWeight: '900', color: '#000' }}>
+                                {userName.charAt(0).toUpperCase()}
+                            </Text>
                         </View>
                     )}
                 </TouchableOpacity>

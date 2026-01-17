@@ -31,7 +31,7 @@ export default function ProfileScreen() {
     );
 
     const userName = user?.user_metadata?.full_name || 'Alex Johnson';
-    const avatarUrl = user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/300';
+    const avatarUrl = user?.user_metadata?.avatar_url || null;
 
     // ... existing handlers ...
 
@@ -136,11 +136,19 @@ export default function ProfileScreen() {
                             shadowOpacity: 1,
                             shadowRadius: 0,
                         }}>
-                            <Image
-                                source={{ uri: avatarUrl }}
-                                style={{ width: '100%', height: '100%' }}
-                                contentFit="cover"
-                            />
+                            {avatarUrl ? (
+                                <Image
+                                    source={{ uri: avatarUrl }}
+                                    style={{ width: '100%', height: '100%' }}
+                                    contentFit="cover"
+                                />
+                            ) : (
+                                <View style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#CCFF66' }}>
+                                    <Text style={{ fontSize: 48, fontWeight: '900', color: '#000' }}>
+                                        {userName.charAt(0).toUpperCase()}
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                         <View style={{
                             position: 'absolute',
@@ -267,11 +275,19 @@ export default function ProfileScreen() {
                                 marginBottom: 12,
                                 backgroundColor: '#fff'
                             }}>
-                                <Image
-                                    source={{ uri: avatarUrl }}
-                                    style={{ width: '100%', height: '100%' }}
-                                    contentFit="cover"
-                                />
+                                {avatarUrl ? (
+                                    <Image
+                                        source={{ uri: avatarUrl }}
+                                        style={{ width: '100%', height: '100%' }}
+                                        contentFit="cover"
+                                    />
+                                ) : (
+                                    <View style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#CCFF66' }}>
+                                        <Text style={{ fontSize: 32, fontWeight: '900', color: '#000' }}>
+                                            {userName.charAt(0).toUpperCase()}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                             <Text style={{ fontSize: 20, fontWeight: '800', color: '#000', marginBottom: 4 }}>{userName}</Text>
                             <Text style={{ fontSize: 14, fontWeight: '600', color: '#666' }}>{user?.email || 'email@example.com'}</Text>
