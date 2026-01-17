@@ -83,13 +83,13 @@ export const createOrderIntent = async (items, totalAmount) => {
 };
 
 // Confirm order after payment
-export const confirmOrder = async (paymentIntentId, items, totalAmount) => {
+export const confirmOrder = async (paymentIntentId, items, totalAmount, address, phoneNumber) => {
     try {
         const headers = await getAuthHeaders();
         const response = await fetch(`${API_URL}/api/shop/order/confirm`, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ paymentIntentId, items, totalAmount })
+            body: JSON.stringify({ paymentIntentId, items, totalAmount, address, phoneNumber })
         });
 
         const data = await response.json();

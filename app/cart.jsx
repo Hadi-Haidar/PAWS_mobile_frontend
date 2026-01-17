@@ -126,7 +126,9 @@ export default function CartScreen() {
             const { error: confirmError } = await confirmOrder(
                 data.paymentIntentId,
                 cart,
-                total
+                total,
+                address,
+                phoneNumber
             );
 
             if (confirmError) console.error('Order confirmation failed:', confirmError);

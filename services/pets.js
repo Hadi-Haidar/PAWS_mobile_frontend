@@ -80,15 +80,40 @@ export const getPetById = async (id) => {
     return { data: pet, error: null };
 };
 
-export const updatePet = async (id, updates) => {
-    const { data, error } = await supabase
-        .from('Pet')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+// Helper to get auth headers (copied from other services)
+const getAuthHeaders = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+        };
+    }
+    return { 'Content-Type': 'application/json' };
+};
 
-    return { data, error };
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+
+export const updatePet = async (id, updates) => {
+    try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`${API_URL}/api/pets/${id}`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(updates)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update pet');
+        }
+
+        const data = await response.json();
+        return { data, error: null };
+    } catch (error) {
+        console.error('Error updating pet:', error);
+        return { data: null, error: error.message };
+    }
 };
 
 export const deletePet = async (id) => {
