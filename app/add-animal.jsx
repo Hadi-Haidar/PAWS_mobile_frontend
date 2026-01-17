@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { uploadImage } from '../services/storage';
 
 export default function AddAnimalScreen() {
     const router = useRouter();
@@ -25,6 +26,7 @@ export default function AddAnimalScreen() {
     const { token } = useAuth();
 
     const [loading, setLoading] = useState(false);
+    const [statusText, setStatusText] = useState('Submit for Review');
     const [image, setImage] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
@@ -38,12 +40,11 @@ export default function AddAnimalScreen() {
     });
 
     const pickImage = async () => {
-        console.log('ImagePicker Keys:', Object.keys(ImagePicker));
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [4, 3],
-            quality: 1,
+            quality: 0.5,
         });
 
         if (!result.canceled) {
@@ -219,8 +220,16 @@ export default function AddAnimalScreen() {
         }
 
         setLoading(true);
+        setStatusText(image ? 'Uploading Photo...' : 'Saving Details...');
 
         try {
+            // Upload image to Supabase Storage first
+            let uploadedImageUrl = null;
+            if (image) {
+                uploadedImageUrl = await uploadImage(image);
+                setStatusText('Saving Details...');
+            }
+
             const API_URL = __DEV__
                 ? 'http://192.168.10.111:5000/api'
                 : 'http://localhost:5000/api';
@@ -229,7 +238,7 @@ export default function AddAnimalScreen() {
                 ...formData,
                 age: formData.age ? parseInt(formData.age) : null,
                 description: formData.description || `Found/Reported: ${formData.name}`,
-                imageUrl: image
+                imageUrl: uploadedImageUrl
             };
 
             const response = await fetch(`${API_URL}/pets/create`, {
@@ -256,6 +265,7 @@ export default function AddAnimalScreen() {
             Alert.alert('Error', error.message || 'Failed to submit report');
         } finally {
             setLoading(false);
+            setStatusText('Submit for Review');
         }
     };
 
@@ -568,7 +578,10 @@ export default function AddAnimalScreen() {
                     }}
                 >
                     {loading ? (
-                        <ActivityIndicator color="black" />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            <ActivityIndicator color="black" />
+                            <Text style={{ fontSize: 16, fontWeight: '900', textTransform: 'uppercase' }}>{statusText}</Text>
+                        </View>
                     ) : (
                         <>
                             <MaterialIcons name="pets" size={28} color="black" />

@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPetById, updatePet } from '../../services/pets';
+import { uploadImage } from '../../services/storage';
 
 const PET_TYPES = ['Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Other'];
 
@@ -61,7 +62,7 @@ export default function EditPetScreen() {
             mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [4, 5],
-            quality: 0.8,
+            quality: 0.5,
         });
 
         if (!result.canceled && result.assets[0]) {
@@ -197,6 +198,19 @@ export default function EditPetScreen() {
 
         setSaving(true);
 
+        // Upload image if it's a new local file
+        let finalImageUrl = imageUrl;
+        if (imageUrl && !imageUrl.startsWith('http')) {
+            try {
+                finalImageUrl = await uploadImage(imageUrl);
+            } catch (error) {
+                console.error("Image upload failed:", error);
+                Alert.alert('Upload Error', 'Failed to upload image. Please try again.');
+                setSaving(false);
+                return;
+            }
+        }
+
         const updates = {
             name: name.trim(),
             type,
@@ -206,7 +220,7 @@ export default function EditPetScreen() {
             Latitude: latitude ? parseFloat(latitude) : null,
             Longitude: longitude ? parseFloat(longitude) : null,
             description: description.trim() || null,
-            images: imageUrl ? [imageUrl] : [],
+            images: finalImageUrl ? [finalImageUrl] : [],
         };
 
         const { error } = await updatePet(id, updates);
