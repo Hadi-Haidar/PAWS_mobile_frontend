@@ -1,11 +1,13 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AiLine from '../../components/AiLine';
 import PetCard from '../../components/PetCard';
 import { useAuth } from '../../context/AuthContext';
 import { deletePet, getPets } from '../../services/pets';
@@ -81,6 +83,7 @@ export default function HomeScreen() {
     // Selection mode state
     const [selectedPet, setSelectedPet] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showAi, setShowAi] = useState(true);
 
     const router = useRouter();
     const { user } = useAuth();
@@ -96,6 +99,22 @@ export default function HomeScreen() {
     const avatarUrl = useMemo(() => {
         return user?.user_metadata?.avatar_url || null;
     }, [user?.user_metadata?.avatar_url]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const loadAiMode = async () => {
+                try {
+                    const savedMode = await AsyncStorage.getItem('AI_MODE');
+                    if (savedMode !== null) {
+                        setShowAi(savedMode === 'true');
+                    }
+                } catch (e) {
+                    console.error('Failed to load AI mode', e);
+                }
+            };
+            loadAiMode();
+        }, [])
+    );
 
     const fetchPets = useCallback(async (isRefresh = false, showLoading = true) => {
         if (isRefresh) {
@@ -394,6 +413,11 @@ export default function HomeScreen() {
                 </TouchableOpacity>
             </View>
 
+            {/* Center: AI Robot Timeline */}
+            <View style={{ flex: 1 }}>
+                {showAi && <AiLine />}
+            </View>
+
             {/* Right Side: QR Scanner */}
             <TouchableOpacity
                 onPress={() => router.push('/qr-scanner')}
@@ -415,7 +439,7 @@ export default function HomeScreen() {
                 <MaterialCommunityIcons name="qrcode-scan" size={24} color="black" />
             </TouchableOpacity>
         </View>
-    ), [insets.top, avatarUrl, router]);
+    ), [insets.top, avatarUrl, router, showAi]);
 
     // Memoized Header Component - CRITICAL: Must be stable to prevent FlashList re-measuring
     const ListHeader = useMemo(() => (

@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Alert, Modal, ScrollView, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Modal, ScrollView, StatusBar, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useFavorites } from '../../context/FavoritesContext';
@@ -16,6 +17,31 @@ export default function ProfileScreen() {
     const [isSettingsVisible, setSettingsVisible] = useState(false);
     const [totalDonated, setTotalDonated] = useState(0);
     const [donationCount, setDonationCount] = useState(0);
+    const [aiMode, setAiMode] = useState(true);
+
+    useEffect(() => {
+        loadAiMode();
+    }, []);
+
+    const loadAiMode = async () => {
+        try {
+            const savedMode = await AsyncStorage.getItem('AI_MODE');
+            if (savedMode !== null) {
+                setAiMode(savedMode === 'true');
+            }
+        } catch (e) {
+            console.error('Failed to load AI mode', e);
+        }
+    };
+
+    const toggleAiMode = async (value) => {
+        setAiMode(value);
+        try {
+            await AsyncStorage.setItem('AI_MODE', value.toString());
+        } catch (e) {
+            console.error('Failed to save AI mode', e);
+        }
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -294,6 +320,36 @@ export default function ProfileScreen() {
                         </View>
 
                         {/* Actions */}
+
+                        {/* AI Mode Toggle */}
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            backgroundColor: '#fff',
+                            borderWidth: 2,
+                            borderColor: '#000',
+                            borderRadius: 12,
+                            paddingHorizontal: 16,
+                            paddingVertical: 12,
+                            marginBottom: 12,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 4, height: 4 },
+                            shadowOpacity: 1,
+                            shadowRadius: 0
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <MaterialCommunityIcons name="robot" size={24} color="black" style={{ marginRight: 10 }} />
+                                <Text style={{ fontSize: 16, fontWeight: '800' }}>AI Robot Mode</Text>
+                            </View>
+                            <Switch
+                                value={aiMode}
+                                onValueChange={toggleAiMode}
+                                trackColor={{ false: "#767577", true: "#CCFF66" }}
+                                thumbColor={aiMode ? "#000" : "#f4f3f4"}
+                            />
+                        </View>
+
                         <TouchableOpacity
                             onPress={handleSignOut}
                             style={{
