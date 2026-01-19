@@ -7,6 +7,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AiChatModal from '../../components/AiChatModal';
 import AiLine from '../../components/AiLine';
 import PetCard from '../../components/PetCard';
 import { useAuth } from '../../context/AuthContext';
@@ -84,6 +85,7 @@ export default function HomeScreen() {
     const [selectedPet, setSelectedPet] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showAi, setShowAi] = useState(true);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     const router = useRouter();
     const { user } = useAuth();
@@ -414,9 +416,13 @@ export default function HomeScreen() {
             </View>
 
             {/* Center: AI Robot Timeline */}
-            <View style={{ flex: 1 }}>
+            <TouchableOpacity
+                style={{ flex: 1 }}
+                activeOpacity={1}
+                onPress={() => setIsChatOpen(true)}
+            >
                 {showAi && <AiLine />}
-            </View>
+            </TouchableOpacity>
 
             {/* Right Side: QR Scanner */}
             <TouchableOpacity
@@ -439,7 +445,7 @@ export default function HomeScreen() {
                 <MaterialCommunityIcons name="qrcode-scan" size={24} color="black" />
             </TouchableOpacity>
         </View>
-    ), [insets.top, avatarUrl, router, showAi]);
+    ), [insets.top, avatarUrl, router, showAi, setIsChatOpen]);
 
     // Memoized Header Component - CRITICAL: Must be stable to prevent FlashList re-measuring
     const ListHeader = useMemo(() => (
@@ -651,6 +657,8 @@ export default function HomeScreen() {
                     <MaterialCommunityIcons name="plus" size={32} color="black" />
                 </TouchableOpacity>
             )}
+            {/* AI Chat Modal */}
+            <AiChatModal visible={isChatOpen} onClose={() => setIsChatOpen(false)} />
         </View>
     );
 }

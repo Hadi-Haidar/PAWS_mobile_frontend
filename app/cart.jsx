@@ -136,8 +136,8 @@ export default function CartScreen() {
             // Success
             clearCart();
             Alert.alert(
-                '🎉 Order Success!',
-                `Your payment of $${total.toFixed(2)} was successful!`,
+                'Order Success',
+                `Your payment of $${total.toFixed(2)} was successful! We will notify you by WhatsApp.`,
                 [{ text: 'Back to Shop', onPress: () => router.back() }]
             );
 
