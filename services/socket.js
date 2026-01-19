@@ -8,7 +8,7 @@ const origin = Constants.expoConfig?.hostUri
     ? `http://${Constants.expoConfig.hostUri.split(':').shift()}:5000`
     : 'http://localhost:5000';
 
-console.log("Socket Connecting to:", origin);
+
 
 const socket = io(origin, {
     autoConnect: false,

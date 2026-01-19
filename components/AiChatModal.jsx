@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getAiRecommendation } from '../services/ai';
@@ -31,7 +31,11 @@ const QUESTIONS = [
 
 export default function AiChatModal({ visible, onClose }) {
     const insets = useSafeAreaInsets();
+    const { width } = useWindowDimensions();
+    const isTablet = width > 768;
+    const contentWidth = isTablet ? 600 : '100%';
     const scrollRef = useRef(null);
+
 
     const [messages, setMessages] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -148,7 +152,15 @@ export default function AiChatModal({ visible, onClose }) {
                 {/* Chat Area */}
                 <ScrollView
                     ref={scrollRef}
-                    contentContainerStyle={[styles.chatContent, { paddingBottom: showResult ? 80 : 350 }]}
+                    contentContainerStyle={[
+                        styles.chatContent,
+                        {
+                            paddingBottom: showResult ? 180 : 450,
+                            maxWidth: 800,
+                            width: '100%',
+                            alignSelf: 'center'
+                        }
+                    ]}
                     keyboardShouldPersistTaps="handled"
                 >
                     {messages.map((msg, index) => (
@@ -158,8 +170,14 @@ export default function AiChatModal({ visible, onClose }) {
                             style={[
                                 styles.messageBubble,
                                 msg.sender === 'user' ? styles.userBubble : styles.aiBubble,
-                                msg.isResult && styles.resultBubble
+                                msg.isResult && styles.resultBubble,
+                                {
+                                    maxWidth: msg.isResult
+                                        ? (isTablet ? 700 : '95%')
+                                        : (isTablet ? 500 : '85%')
+                                }
                             ]}
+
                         >
                             {msg.sender === 'ai' && (
                                 <View style={{ marginRight: 8, marginTop: 4 }}>
@@ -197,7 +215,19 @@ export default function AiChatModal({ visible, onClose }) {
 
                 {/* Options Area */}
                 {isQuestionActive && (
-                    <Animated.View entering={FadeInDown.duration(500)} layout={Layout.springify()} style={[styles.optionsContainer, { paddingBottom: insets.bottom + 20 }]}>
+                    <Animated.View
+                        entering={FadeInDown.duration(500)}
+                        layout={Layout.springify()}
+                        style={[
+                            styles.optionsContainer,
+                            {
+                                paddingBottom: insets.bottom + 20,
+                                width: contentWidth,
+                                left: isTablet ? (width - 600) / 2 : 0,
+                                right: undefined // Override absolute right
+                            }
+                        ]}
+                    >
                         <Text style={styles.optionsLabel}>Select an option:</Text>
                         <View style={styles.optionsGrid}>
                             {currentQuestion.options.map((option, idx) => (
@@ -215,7 +245,18 @@ export default function AiChatModal({ visible, onClose }) {
                 )}
 
                 {showResult && (
-                    <Animated.View entering={FadeInDown.duration(500)} style={[styles.restartContainer, { paddingBottom: insets.bottom + 20 }]}>
+                    <Animated.View
+                        entering={FadeInDown.duration(500)}
+                        style={[
+                            styles.restartContainer,
+                            {
+                                paddingBottom: insets.bottom + 20,
+                                width: contentWidth,
+                                left: isTablet ? (width - 600) / 2 : 0,
+                                right: undefined
+                            }
+                        ]}
+                    >
                         <TouchableOpacity style={styles.restartButton} onPress={resetChat}>
                             <MaterialCommunityIcons name="refresh" size={20} color="#fff" />
                             <Text style={styles.restartText}>Start Over</Text>

@@ -3,7 +3,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function QRScannerScreen() {
@@ -25,21 +25,43 @@ export default function QRScannerScreen() {
         setScanned(true);
         Vibration.vibrate(100);
 
-        // Check if it's a pet URL from our app
-        if (data.includes('/pet/')) {
-            const petId = data.split('/pet/').pop();
+        // Check if it's a Pet URL (e.g. https://.../pet/123)
+        const petMatch = data.match(/\/pet\/([a-zA-Z0-9-]+)/);
+        const petId = petMatch ? petMatch[1] : null;
+
+        if (petId) {
             Alert.alert(
-                'Pet Found!',
-                `Found pet with ID: ${petId}`,
+                'Pet Discovered',
+                'How would you like to view this pet?',
                 [
-                    { text: 'View Pet', onPress: () => router.replace(`/pet/${petId}`) },
-                    { text: 'Scan Again', onPress: () => setScanned(false) }
+                    {
+                        text: 'View in App',
+                        onPress: () => router.push(`/pet/${petId}`)
+                    },
+                    {
+                        text: 'View on Web',
+                        onPress: () => Linking.openURL(data)
+                    },
+                    {
+                        text: 'Cancel',
+                        onPress: () => setScanned(false),
+                        style: 'cancel'
+                    }
+                ]
+            );
+        } else if (data.startsWith('http')) {
+            Alert.alert(
+                'External Link',
+                'Open this link in browser?',
+                [
+                    { text: 'Open', onPress: () => Linking.openURL(data) },
+                    { text: 'Cancel', onPress: () => setScanned(false), style: 'cancel' }
                 ]
             );
         } else {
             Alert.alert(
-                'QR Code Scanned',
-                `Data: ${data}`,
+                'Scanned Data',
+                data,
                 [
                     { text: 'OK', onPress: () => setScanned(false) }
                 ]

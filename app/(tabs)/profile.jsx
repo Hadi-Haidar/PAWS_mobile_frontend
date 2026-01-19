@@ -248,10 +248,11 @@ export default function ProfileScreen() {
 
                 <Card
                     title="Support"
-                    subtitle="FAQs & Live Chat"
-                    tag="24/7 Service"
+                    subtitle="Report Bugs & Issues"
+                    tag="Help Center"
                     color="#FFFFFF" // White
                     icon="headphones"
+                    onPress={() => router.push('/support')}
                 />
 
             </ScrollView>

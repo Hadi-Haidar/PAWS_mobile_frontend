@@ -49,6 +49,8 @@ const RootLayoutContent = () => {
                 <Stack.Screen name="edit-pet/[id]" options={{ headerShown: false }} />
                 <Stack.Screen name="auth/verify-otp" options={{ headerShown: false }} />
                 <Stack.Screen name="qr-scanner" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+                <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
+                <Stack.Screen name="support" options={{ headerShown: false }} />
                 <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
             </Stack>
             <StatusBar style="auto" />

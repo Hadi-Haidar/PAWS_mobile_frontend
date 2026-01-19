@@ -192,7 +192,7 @@ export default function PetDetailsScreen() {
 
             <ScrollView
                 contentContainerStyle={{
-                    paddingBottom: 200, // Extra space for fixed footer
+                    paddingBottom: isTablet ? 240 : 180,
                     flexGrow: 1
                 }}
                 showsVerticalScrollIndicator={false}
@@ -339,7 +339,7 @@ export default function PetDetailsScreen() {
                             />
                             <Text
                                 style={{
-                                    fontSize: isSmallDevice ? 14 : 15,
+                                    fontSize: isTablet ? 18 : isSmallDevice ? 14 : 15,
                                     fontWeight: '700',
                                     color: 'black',
                                     marginLeft: 4,
@@ -387,9 +387,9 @@ export default function PetDetailsScreen() {
 
                         {/* Description - Fully expandable, no line limit */}
                         <Text style={{
-                            fontSize: isTablet ? 16 : isSmallDevice ? 14 : 15,
+                            fontSize: isTablet ? 18 : isSmallDevice ? 14 : 15,
                             fontWeight: '500',
-                            lineHeight: isTablet ? 28 : isSmallDevice ? 22 : 24,
+                            lineHeight: isTablet ? 32 : isSmallDevice ? 22 : 24,
                             color: '#374151',
                         }}>
                             {pet.description || `${pet.name} is looking for a loving forever home. Come meet this adorable companion!`}

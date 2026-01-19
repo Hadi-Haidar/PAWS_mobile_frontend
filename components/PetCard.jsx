@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { memo } from 'react';
-import { Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { Text, TouchableOpacity, Vibration, View, useWindowDimensions } from 'react-native';
 
 import { useFavorites } from '../context/FavoritesContext';
 
@@ -12,6 +12,8 @@ const PetCard = memo(({ pet, isSelected, onLongPress, selectionMode, isMine }) =
     const { isFavorite, toggleFavorite } = useFavorites();
     const isFav = isFavorite(pet.id);
     const imageUrl = pet.images && pet.images.length > 0 ? pet.images[0] : null;
+    const { width } = useWindowDimensions();
+    const isTablet = width > 600;
 
     // Default to 'User' if not specified. Real app would check user role or owner type.
     const isFromShelter = false;
@@ -193,18 +195,18 @@ const PetCard = memo(({ pet, isSelected, onLongPress, selectionMode, isMine }) =
             {/* Info Container */}
             <View style={{ padding: 10, paddingHorizontal: 10, paddingBottom: 10, paddingTop: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '900', color: '#000', flex: 1 }} numberOfLines={1}>
+                    <Text style={{ fontSize: isTablet ? 18 : 14, fontWeight: '900', color: '#000', flex: 1 }} numberOfLines={1}>
                         {pet.name}
                     </Text>
                 </View>
-                <Text style={{ color: '#4B5563', fontSize: 10, fontWeight: '700', marginBottom: 2 }} numberOfLines={1}>
+                <Text style={{ color: '#4B5563', fontSize: isTablet ? 14 : 10, fontWeight: '700', marginBottom: 2 }} numberOfLines={1}>
                     {pet.breed || pet.type} • {pet.age ? `${pet.age} yrs` : 'Unknown'}
                 </Text>
 
                 {pet.location && (
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                        <MaterialCommunityIcons name="map-marker" size={10} color="#6B7280" />
-                        <Text style={{ color: '#9CA3AF', fontSize: 9, fontFamily: 'monospace', marginLeft: 2 }} numberOfLines={1}>
+                        <MaterialCommunityIcons name="map-marker" size={isTablet ? 14 : 10} color="#6B7280" />
+                        <Text style={{ color: '#9CA3AF', fontSize: isTablet ? 12 : 9, fontFamily: 'monospace', marginLeft: 2 }} numberOfLines={1}>
                             {pet.location}
                         </Text>
                     </View>

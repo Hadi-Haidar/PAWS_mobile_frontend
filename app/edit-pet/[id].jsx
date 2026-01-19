@@ -164,7 +164,7 @@ export default function EditPetScreen() {
                     locationName = parts.slice(0, 3).join(', ');
                 }
             } catch (geoError) {
-                console.log('Nominatim geocoding failed:', geoError);
+
             }
 
             setLocation(locationName || location);
@@ -175,7 +175,7 @@ export default function EditPetScreen() {
             );
 
         } catch (error) {
-            console.log('Location error:', error);
+
             Alert.alert('Location Error', 'Could not fetch location. Please ensure GPS is enabled.');
         } finally {
             setGpsLoading(false);
@@ -204,7 +204,7 @@ export default function EditPetScreen() {
             try {
                 finalImageUrl = await uploadImage(imageUrl);
             } catch (error) {
-                console.error("Image upload failed:", error);
+
                 Alert.alert('Upload Error', 'Failed to upload image. Please try again.');
                 setSaving(false);
                 return;

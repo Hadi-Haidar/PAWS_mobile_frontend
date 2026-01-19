@@ -13,7 +13,6 @@ const getAuthHeaders = async () => {
 export const getAiRecommendation = async (answers) => {
     try {
         const headers = await getAuthHeaders();
-        console.log('Sending answers to AI:', answers);
 
         const response = await fetch(`${API_URL}/api/ai/recommend`, {
             method: 'POST',
@@ -34,7 +33,6 @@ export const getAiRecommendation = async (answers) => {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('AI Service Error:', error);
         throw error;
     }
 };

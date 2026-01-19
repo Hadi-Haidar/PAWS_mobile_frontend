@@ -2,7 +2,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, FlatList, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, ScrollView, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getActivities } from '../../services/activity';
 
@@ -11,6 +11,8 @@ const TABS = ['All', 'Adoptions', 'Visits', 'Orders'];
 export default function ActivityScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const { width } = useWindowDimensions();
+    const isTablet = width > 700;
     const [activeTab, setActiveTab] = useState('All');
 
     const [activities, setActivities] = useState([]);
@@ -57,6 +59,9 @@ export default function ActivityScreen() {
                 shadowOpacity: 1,
                 shadowRadius: 0,
                 elevation: 4,
+                flex: isTablet ? 1 : 0,
+                maxWidth: isTablet ? '48%' : '100%',
+                marginRight: 0 // handled by columnWrapper or gap gap logic if supported, or manually
             }}
         >
             {/* Left Color Strip */}
@@ -272,9 +277,12 @@ export default function ActivityScreen() {
                 </View>
             ) : (
                 <FlatList
+                    key={isTablet ? 'tablet-grid' : 'phone-list'}
                     data={filteredData}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id}
+                    numColumns={isTablet ? 2 : 1}
+                    columnWrapperStyle={isTablet ? { justifyContent: 'space-between' } : null}
                     contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
                     showsVerticalScrollIndicator={false}
                     ListEmptyComponent={
@@ -296,16 +304,29 @@ export default function ActivityScreen() {
                 visible={!!selectedItem}
                 onRequestClose={() => setSelectedItem(null)}
             >
-                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+                <View style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    justifyContent: isTablet ? 'center' : 'flex-end',
+                    alignItems: isTablet ? 'center' : 'stretch',
+                    padding: isTablet ? 20 : 0
+                }}>
                     <View style={{
                         backgroundColor: 'white',
-                        borderTopLeftRadius: 30,
-                        borderTopRightRadius: 30,
+                        borderRadius: isTablet ? 24 : 0,
+                        borderTopLeftRadius: isTablet ? 24 : 30,
+                        borderTopRightRadius: isTablet ? 24 : 30,
                         borderWidth: 3,
                         borderColor: 'black',
                         maxHeight: '80%',
+                        width: isTablet ? 600 : '100%',
                         padding: 24,
-                        paddingBottom: 40
+                        paddingBottom: isTablet ? 24 : 40,
+                        alignSelf: isTablet ? 'center' : undefined,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 8, height: 8 },
+                        shadowOpacity: 0.5,
+                        shadowRadius: 10,
                     }}>
                         {/* Modal Header */}
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>

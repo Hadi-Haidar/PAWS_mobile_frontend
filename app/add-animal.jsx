@@ -173,7 +173,7 @@ export default function AddAnimalScreen() {
                     locationName = parts.slice(0, 3).join(', '); // Max 3 parts for readability
                 }
             } catch (geoError) {
-                console.log('Nominatim geocoding failed, using fallback:', geoError);
+
                 // Fallback to expo-location if Nominatim fails
                 try {
                     const reverseGeocode = await Location.reverseGeocodeAsync({
@@ -201,7 +201,7 @@ export default function AddAnimalScreen() {
             );
 
         } catch (error) {
-            console.log('Location error:', error);
+
             Alert.alert('Location Error', 'Could not fetch location. Please ensure:\n\n• GPS is enabled\n• You are outdoors or near a window\n• Location permissions are granted');
         } finally {
             setLoading(false);
@@ -261,7 +261,7 @@ export default function AddAnimalScreen() {
             ]);
 
         } catch (error) {
-            console.error('Submit Error:', error);
+
             Alert.alert('Error', error.message || 'Failed to submit report');
         } finally {
             setLoading(false);

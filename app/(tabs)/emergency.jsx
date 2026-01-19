@@ -168,7 +168,7 @@ export default function EmergencyScreen() {
                     filter: `userId=eq.${user.id}`,
                 },
                 (payload) => {
-                    console.log('Realtime Appointment Update:', payload);
+
                     fetchData();
                 }
             )
@@ -239,6 +239,11 @@ export default function EmergencyScreen() {
 
         if (!selectedTime) {
             Alert.alert('Select Time', 'Please select a time slot');
+            return;
+        }
+
+        if (!selectedVet) {
+            Alert.alert('Select Vet', 'Please select a veterinarian for the appointment');
             return;
         }
 
@@ -456,7 +461,7 @@ export default function EmergencyScreen() {
                         style={styles.selectButton}
                     >
                         <Text style={styles.selectButtonText}>
-                            {selectedVet ? selectedVet.name : 'Any Available Vet'}
+                            {selectedVet ? selectedVet.name : 'Select a Vet'}
                         </Text>
                         <MaterialCommunityIcons name="chevron-down" size={24} color="#000" />
                     </TouchableOpacity>
@@ -657,23 +662,6 @@ export default function EmergencyScreen() {
                             </TouchableOpacity>
                         </View>
                         <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-                            {/* Any Vet Option */}
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setSelectedVet(null);
-                                    setShowVetModal(false);
-                                }}
-                                style={[
-                                    styles.modalOption,
-                                    selectedVet === null && styles.modalOptionSelected
-                                ]}
-                            >
-                                <Text style={styles.modalOptionText}>Any Available Vet</Text>
-                                {selectedVet === null && (
-                                    <MaterialCommunityIcons name="check" size={20} color={THEME.primary} />
-                                )}
-                            </TouchableOpacity>
-
                             {/* List of Vets */}
                             {vets.map((vet) => (
                                 <TouchableOpacity
