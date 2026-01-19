@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
@@ -14,12 +14,18 @@ export default function SignInScreen() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { user } = useAuth();
+    const segments = useSegments();
 
     useEffect(() => {
         if (user) {
-            router.replace('/(tabs)');
+            // Prevent redirect if we are in the Reset Password flow (Sign In screen might still be mounted in stack)
+            const inResetFlow = segments[0] === 'auth' && (segments[1] === 'reset-password' || segments[1] === 'verify-reset-otp');
+
+            if (!inResetFlow) {
+                router.replace('/(tabs)');
+            }
         }
-    }, [user]);
+    }, [user, segments]);
 
     const handleSignIn = async () => {
         if (!email || !password) {
@@ -112,6 +118,15 @@ export default function SignInScreen() {
                             </View>
                         </View>
 
+
+                        {/* Forgot Password Link */}
+                        <TouchableOpacity
+                            className="self-end mb-6"
+                            onPress={() => router.push('/auth/forgot-password')}
+                        >
+                            <Text className="text-text-secondary font-medium">Forgot Password?</Text>
+                        </TouchableOpacity>
+
                         {/* Sign In Button */}
                         <TouchableOpacity
                             className="w-full h-14 bg-primary items-center justify-center shadow-md border-2 border-black active:translate-y-1 active:shadow-none mb-6"
@@ -155,6 +170,6 @@ export default function SignInScreen() {
                     </View>
                 </View>
             </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardAvoidingView >
     );
 }

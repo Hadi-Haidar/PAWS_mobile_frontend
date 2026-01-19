@@ -26,9 +26,6 @@ const RootLayoutContent = () => {
         if (!isAuthenticated && !inAuthGroup) {
             // Redirect to login if not authenticated
             router.replace('/auth/signin');
-        } else if (isAuthenticated && inAuthGroup) {
-            // Redirect to home if already authenticated
-            router.replace('/(tabs)');
         }
     }, [isAuthenticated, loading, segments]);
 
@@ -44,8 +41,7 @@ const RootLayoutContent = () => {
         <ThemeProvider value={DefaultTheme}>
             <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="auth/signin" options={{ headerShown: false }} />
-                <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
+                <Stack.Screen name="auth" options={{ headerShown: false }} />
                 <Stack.Screen name="add-animal" options={{ headerShown: false }} />
                 <Stack.Screen name="pet/[id]" options={{ headerShown: false }} />
                 <Stack.Screen name="favorites" options={{ headerShown: false }} />

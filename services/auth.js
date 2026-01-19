@@ -29,14 +29,45 @@ export const signInWithEmail = async (email, password) => {
 };
 
 // Verify OTP
-export const verifyOtp = async (email, token) => {
+// Verify OTP
+export const verifyOtp = async (email, token, type = 'email') => {
     const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
-        type: 'email',
+        type,
     });
     return { data, error };
 };
+
+// Send OTP (Passwordless Sign In)
+export const sendOtp = async (email) => {
+    const { data, error } = await supabase.auth.signInWithOtp({
+        email
+    });
+    return { data, error };
+};
+
+// Send Password Reset Email
+export const sendPasswordResetEmail = async (email) => {
+    // Redirect to a specific route in the app to handle password update
+    const redirectUrl = makeRedirectUri({
+        path: 'auth/reset-password',
+    });
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+    });
+    return { data, error };
+};
+
+// Update User (Password)
+export const updateUserPassword = async (newPassword) => {
+    const { data, error } = await supabase.auth.updateUser({
+        password: newPassword
+    });
+    return { data, error };
+};
+
 
 // Google Login (Adapted for Expo)
 export const signInWithGoogle = async () => {
