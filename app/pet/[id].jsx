@@ -90,7 +90,7 @@ export default function PetDetailsScreen() {
                         router.push({
                             pathname: `/chat/${pet.ownerId}`,
                             params: {
-                                name: pet.ownerRole === 'Admin' ? 'Main Shelter' : (pet.contactName || 'Owner'),
+                                name: pet.ownerRole === 'Admin' ? 'Main Shelter' : (pet.ownerName || pet.contactName || 'Owner'),
                             }
                         });
                     }
@@ -587,10 +587,15 @@ export default function PetDetailsScreen() {
                 {/* Chat with Owner Button */}
                 <TouchableOpacity
                     onPress={() => {
+                        if (user?.id === pet.ownerId) {
+                            Alert.alert('Ownership', 'You cannot chat with yourself!');
+                            return;
+                        }
+
                         router.push({
                             pathname: `/chat/${pet.ownerId || 'unknown'}`,
                             params: {
-                                name: pet.ownerRole === 'Admin' ? 'Main Shelter' : (pet.contactName || 'Owner'),
+                                name: pet.ownerRole === 'Admin' ? 'Main Shelter' : (pet.ownerName || pet.contactName || 'Owner'),
                                 avatar: null
                             }
                         });

@@ -9,13 +9,17 @@ import { ActivityIndicator, Alert, RefreshControl, ScrollView, StatusBar, Text, 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AiChatModal from '../../components/AiChatModal';
 import AiLine from '../../components/AiLine';
+import NotificationModal from '../../components/NotificationModal';
 import PetCard from '../../components/PetCard';
 import { useAuth } from '../../context/AuthContext';
+import { getNotifications } from '../../services/notifications';
 import { deletePet, getPets } from '../../services/pets';
+import socket from '../../services/socket';
 
 const CATEGORIES = [
     { id: 'all', label: 'All', icon: 'paw' },
     { id: 'mine', label: 'My Pets', icon: 'account-heart' },
+    { id: 'shelter', label: 'Shelter', icon: 'home-city' },
     { id: 'Dog', label: 'Dogs', icon: 'dog' },
     { id: 'Cat', label: 'Cats', icon: 'cat' },
     { id: 'Bird', label: 'Birds', icon: 'bird' },
@@ -86,6 +90,8 @@ export default function HomeScreen() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [showAi, setShowAi] = useState(true);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [notificationCount, setNotificationCount] = useState(0);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     const router = useRouter();
     const { user } = useAuth();
@@ -118,6 +124,49 @@ export default function HomeScreen() {
         }, [])
     );
 
+    // Load initial notification count
+    useEffect(() => {
+        const loadNotificationCount = async () => {
+            const { data } = await getNotifications();
+            const unread = (data || []).filter(n => !n.isRead).reduce((sum, n) => sum + (n.data?.count || 1), 0);
+            setNotificationCount(unread);
+        };
+        if (user) loadNotificationCount();
+    }, [user]);
+
+    // Socket listener for real-time notifications
+    useEffect(() => {
+        if (!user) return;
+
+        socket.auth = { userId: user.id };
+        if (!socket.connected) socket.connect();
+        socket.emit('join_chat', user.id);
+
+        const handleNewNotification = (notification) => {
+            const count = notification.data?.count || 1;
+            setNotificationCount(prev => prev + count);
+        };
+
+        const handleNotificationUpdated = () => {
+            setNotificationCount(prev => prev + 1);
+        };
+
+        const handlePetUpdated = (updatedPet) => {
+            if (!updatedPet || !updatedPet.id) return;
+            setPets(prev => prev.map(p => p.id === updatedPet.id ? { ...p, ...updatedPet } : p));
+        };
+
+        socket.on('new_notification', handleNewNotification);
+        socket.on('notification_updated', handleNotificationUpdated);
+        socket.on('pet_updated', handlePetUpdated);
+
+        return () => {
+            socket.off('new_notification', handleNewNotification);
+            socket.off('notification_updated', handleNotificationUpdated);
+            socket.off('pet_updated', handlePetUpdated);
+        };
+    }, [user]);
+
     const fetchPets = useCallback(async (isRefresh = false, showLoading = true) => {
         if (isRefresh) {
             setRefreshing(true);
@@ -129,6 +178,9 @@ export default function HomeScreen() {
         const filters = {};
         if (selectedCategory === 'mine') {
             if (user?.id) filters.ownerId = user.id;
+        } else if (selectedCategory === 'shelter') {
+            filters.source = 'shelter';
+            if (user?.id) filters.exclude = user.id;
         } else if (selectedCategory !== 'all') {
             filters.type = selectedCategory;
         }
@@ -241,8 +293,9 @@ export default function HomeScreen() {
             isSelected={selectedPet?.id === item.id}
             selectionMode={!!selectedPet}
             onLongPress={handlePetLongPress}
+            isMine={item.ownerId === user?.id}
         />
-    ), [selectedPet, handlePetLongPress]);
+    ), [selectedPet, handlePetLongPress, user?.id]);
 
     // Memoized key extractor
     const keyExtractor = useCallback((item) => item.id.toString(), []);
@@ -401,9 +454,9 @@ export default function HomeScreen() {
                     )}
                 </TouchableOpacity>
 
-                {/* Notification Button - Transparent, no bg */}
+                {/* Notification Button with Badge */}
                 <TouchableOpacity
-                    onPress={() => Alert.alert('Notifications', 'No new notifications')}
+                    onPress={() => setShowNotifications(true)}
                     style={{
                         width: 40,
                         height: 40,
@@ -412,6 +465,25 @@ export default function HomeScreen() {
                     }}
                 >
                     <MaterialCommunityIcons name="bell" size={28} color="#99CC00" />
+                    {notificationCount > 0 && (
+                        <View style={{
+                            position: 'absolute',
+                            top: 2,
+                            right: 2,
+                            backgroundColor: '#FF3B30',
+                            borderRadius: 10,
+                            minWidth: 18,
+                            height: 18,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 2,
+                            borderColor: '#FFFAF0'
+                        }}>
+                            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>
+                                {notificationCount > 9 ? '9+' : notificationCount}
+                            </Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -445,7 +517,7 @@ export default function HomeScreen() {
                 <MaterialCommunityIcons name="qrcode-scan" size={24} color="black" />
             </TouchableOpacity>
         </View>
-    ), [insets.top, avatarUrl, router, showAi, setIsChatOpen]);
+    ), [insets.top, avatarUrl, router, showAi, setIsChatOpen, notificationCount]);
 
     // Memoized Header Component - CRITICAL: Must be stable to prevent FlashList re-measuring
     const ListHeader = useMemo(() => (
@@ -659,6 +731,13 @@ export default function HomeScreen() {
             )}
             {/* AI Chat Modal */}
             <AiChatModal visible={isChatOpen} onClose={() => setIsChatOpen(false)} />
+
+            {/* Notification Modal */}
+            <NotificationModal
+                visible={showNotifications}
+                onClose={() => setShowNotifications(false)}
+                onNotificationCountChange={setNotificationCount}
+            />
         </View>
     );
 }

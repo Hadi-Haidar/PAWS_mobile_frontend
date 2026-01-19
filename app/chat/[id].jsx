@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, FlatList, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Keyboard, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { getChatHistory, updateMessage } from '../../services/chat';
@@ -80,7 +81,8 @@ export default function ChatScreen() {
             socket.off("receive_message");
             socket.off("message_updated");
             socket.off("message_sent");
-            socket.disconnect();
+            socket.off("message_sent");
+            // socket.disconnect(); // Keep connection alive for notifications
         };
     }, [user, id]);
 
@@ -108,7 +110,9 @@ export default function ChatScreen() {
 
         socket.emit("send_message", messageData);
         setInput('');
+        Keyboard.dismiss();
     };
+
 
     const updateMessageState = async (item, newType) => {
         // 1. Update backend
@@ -321,24 +325,31 @@ export default function ChatScreen() {
                 </View>
 
                 <TouchableOpacity
+                    onPress={() => {
+                        Alert.alert(
+                            "⚠️ Safety Warning",
+                            "Please be responsible and cautious before accepting any adoption request.\n\nVerify the adopter's profile and ensure your pet goes to a safe home.",
+                            [{ text: "I Understand", style: "cancel" }]
+                        );
+                    }}
                     style={{
-                        shadowColor: '#000',
+                        shadowColor: '#DC2626',
                         shadowOffset: { width: 2, height: 2 },
                         shadowOpacity: 1,
                         shadowRadius: 0,
                         elevation: 2
                     }}
-                    className="bg-white border-2 border-black p-2 rounded-xl"
+                    className="bg-red-50 border-2 border-red-600 p-2 rounded-xl"
                 >
-                    <MaterialCommunityIcons name="information-variant" size={24} color="black" />
+                    <MaterialCommunityIcons name="alert-decagram" size={24} color="#DC2626" />
                 </TouchableOpacity>
             </View>
 
             {/* Chat Content Wrapped in KeyboardAvoidingView */}
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
             >
                 {/* Chat List */}
                 <View style={{ flex: 1, backgroundColor: '#FFFBF2' }}>
@@ -363,9 +374,9 @@ export default function ChatScreen() {
                     backgroundColor: '#FFFBF2',
                     paddingHorizontal: 16,
                     paddingTop: 12,
-                    paddingBottom: Platform.OS === 'android' ? 16 : (insets.bottom + 16), // Handle safe area manually or let KAV handle it
+                    paddingBottom: Math.max(insets.bottom, 20), // Safe area + comfort spacing
                     borderTopWidth: 2,
-                    borderTopColor: '#00000008', // Very light divider
+                    borderTopColor: '#00000008',
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 12
@@ -405,8 +416,8 @@ export default function ChatScreen() {
                 </View>
             </KeyboardAvoidingView>
 
-            {/* Background elements (Neo Pop) */}
-            <View className="absolute top-24 -left-8 w-16 h-16 bg-yellow-300 border-2 border-black rounded-full -z-10 opacity-20 rotate-12" />
+
+            {/* Background elements (Neo Pop) - cleaned up */}
             <View className="absolute bottom-40 -right-8 w-20 h-20 bg-blue-400 border-2 border-black rounded-lg -z-10 opacity-20 -rotate-12" />
         </View>
     );

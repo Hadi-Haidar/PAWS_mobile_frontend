@@ -6,7 +6,8 @@ import { Text, TouchableOpacity, Vibration, View } from 'react-native';
 
 import { useFavorites } from '../context/FavoritesContext';
 
-const PetCard = memo(({ pet, isSelected, onLongPress, selectionMode }) => {
+const PetCard = memo(({ pet, isSelected, onLongPress, selectionMode, isMine }) => {
+
     const router = useRouter();
     const { isFavorite, toggleFavorite } = useFavorites();
     const isFav = isFavorite(pet.id);
@@ -99,8 +100,32 @@ const PetCard = memo(({ pet, isSelected, onLongPress, selectionMode }) => {
                     </View>
                 )}
 
+                {/* Ownership Badge */}
+                {isMine && (
+                    <View style={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        backgroundColor: '#000',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        borderWidth: 1,
+                        borderColor: '#fff',
+                        zIndex: 10,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4
+                    }}>
+                        <MaterialCommunityIcons name="account" size={10} color="white" />
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: 'white', textTransform: 'uppercase' }}>
+                            MY PET
+                        </Text>
+                    </View>
+                )}
+
                 {/* Source Badge - Only show if we actually know it's a shelter (hidden for now as logic was fake) */}
-                {isFromShelter && (
+                {isFromShelter && !isMine && (
                     <View
                         style={{
                             position: 'absolute',
