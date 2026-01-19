@@ -46,7 +46,8 @@
           "merchantIdentifier": "merchant.com.hadihaidar.paws",
           "enableGooglePay": false
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
