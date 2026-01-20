@@ -94,10 +94,22 @@ export const updatePet = async (id, updates) => {
 };
 
 export const deletePet = async (id) => {
-    const { error } = await supabase
-        .from('Pet')
-        .delete()
-        .eq('id', id);
+    try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`${API_URL}/api/pets/${id}`, {
+            method: 'DELETE',
+            headers
+        });
 
-    return { error };
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete pet');
+        }
+
+        const result = await response.json();
+        return { data: result, error: null };
+    } catch (error) {
+        console.error('Error deleting pet:', error);
+        return { error: error.message };
+    }
 };
